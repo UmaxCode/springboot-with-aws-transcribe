@@ -95,3 +95,4 @@ mvn spring-boot:run
 ## Important Notes
 - This application uses **English (US) - `en-US`** as the transcription language.
 - **Pronunciation is critical** for accurate transcription results. Ensure clear speech for the best accuracy.
+- S3 was created using CloudFormation template : Refer to the [resource-deployment.yaml](resource-deployment.yaml)
