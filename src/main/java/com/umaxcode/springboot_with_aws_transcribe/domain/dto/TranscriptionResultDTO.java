@@ -4,8 +4,8 @@ import lombok.Builder;
 
 @Builder
 public record TranscriptionResultDTO(
-        String text,
-        String timeStamps,
-        String confidenceScore
+        String transcript,
+        String start_time,
+        String end_time
 ) {
 }
