@@ -100,4 +100,4 @@ mvn spring-boot:run
   🎧 [Click here to play the audio](transcribe.m4a)
 ![Pronunciation Example](github.png)
 
-- S3 buckets was created using CloudFormation template : Refer to the [resource-deployment.yaml](resource-deployment.yaml)
+- S3 buckets were created using CloudFormation template : Refer to the [resource-deployment.yaml](resource-deployment.yaml)
