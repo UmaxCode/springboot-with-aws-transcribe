@@ -3,6 +3,7 @@ package com.umaxcode.springboot_with_aws_transcribe.service.impl;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
 import com.umaxcode.springboot_with_aws_transcribe.configs.AWSProperties;
+import com.umaxcode.springboot_with_aws_transcribe.domain.dto.S3PutObjectResultDTO;
 import com.umaxcode.springboot_with_aws_transcribe.service.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,7 +21,7 @@ public class S3ServiceImpl implements S3Service {
 
 
     @Override
-    public PutObjectResult upload(MultipartFile file) throws IOException {
+    public S3PutObjectResultDTO upload(MultipartFile file) throws IOException {
 
         // Generate a unique file name to avoid overwrites
         String fileName = generateUniqueFileName(file.getOriginalFilename());
@@ -39,7 +40,12 @@ public class S3ServiceImpl implements S3Service {
         );
 
         // Upload the file
-        return s3Client.putObject(putObjectRequest);
+        PutObjectResult putObjectResult = s3Client.putObject(putObjectRequest);
+
+        return S3PutObjectResultDTO.builder()
+                .objectKey(fileName)
+                .result(putObjectResult)
+                .build();
     }
 
     @Override
