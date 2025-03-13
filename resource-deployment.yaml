@@ -14,7 +14,7 @@ Resources:
       BucketName: !Sub "transcribe-output-bucket-${AWS::AccountId}-${AWS::Region}"
       AccessControl: Private
 
-  TranscribeServiceRole:
+  TranscribeServiceRole:  ## Not used. Project will be updated to use IAM Role instead of IAM USER Secrete Credentials
     Type: AWS::IAM::Role
     Properties:
       RoleName: TranscribeServiceRole
