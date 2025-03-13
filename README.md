@@ -35,7 +35,7 @@ This project is a **Spring Boot application** that transcribes **M4A audio files
 ### 2. Clone the Repository
 ```sh
  git clone https://github.com/UmaxCode/springboot-with-aws-transcribe.git
- cd speech-to-text-transcription
+ cd springboot-with-aws-transcribe
 ```
 
 ### 3. Configure AWS Credentials
