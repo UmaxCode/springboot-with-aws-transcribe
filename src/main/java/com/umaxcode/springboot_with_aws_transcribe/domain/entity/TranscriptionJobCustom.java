@@ -1,8 +1,8 @@
 package com.umaxcode.springboot_with_aws_transcribe.domain.entity;
 
-import com.amazonaws.services.transcribe.model.TranscriptionJobStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import software.amazon.awssdk.services.transcribe.model.TranscriptionJobStatus;
 
 @Builder
 @Getter

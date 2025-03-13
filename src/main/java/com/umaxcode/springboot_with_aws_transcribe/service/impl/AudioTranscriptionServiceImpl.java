@@ -1,7 +1,5 @@
 package com.umaxcode.springboot_with_aws_transcribe.service.impl;
 
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.transcribe.model.*;
 import com.umaxcode.springboot_with_aws_transcribe.domain.dto.S3PutObjectResultDTO;
 import com.umaxcode.springboot_with_aws_transcribe.domain.entity.TranscriptionJobCustom;
 import com.umaxcode.springboot_with_aws_transcribe.repository.TranscriptionJobRepository;
@@ -13,9 +11,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.transcribe.model.*;
 
 import java.io.IOException;
 import java.util.List;
+
+import static software.amazon.awssdk.services.transcribe.model.TranscriptionJobStatus.COMPLETED;
+import static software.amazon.awssdk.services.transcribe.model.TranscriptionJobStatus.FAILED;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -31,19 +34,18 @@ public class AudioTranscriptionServiceImpl implements AudioTranscriptionService 
     public void uploadAudioForTranscription(MultipartFile file) throws IOException {
         S3PutObjectResultDTO uploadResult = s3Service.upload(file);
         String objectKey = uploadResult.objectKey();
-        StartTranscriptionJobResult startTranscriptionJobResult = transcriptionService.startTranscriptionJob(
+        StartTranscriptionJobResponse startTranscriptionJobResult = transcriptionService.startTranscriptionJob(
                 objectKey,
-                MediaFormat.Mp4,  // TODO: change to support all media format
-                LanguageCode.EnUS
+                MediaFormat.MP4,  // TODO: change to support all media format
+                LanguageCode.EN_US
         );
 
-        String transcriptionJobName = startTranscriptionJobResult.getTranscriptionJob().getTranscriptionJobName();
-        String transcriptionJobStatus = startTranscriptionJobResult.getTranscriptionJob().getTranscriptionJobStatus();
-        TranscriptionJobStatus transcriptionJobStatusEnum = TranscriptionJobStatus.valueOf(transcriptionJobStatus);
+        String transcriptionJobName = startTranscriptionJobResult.transcriptionJob().transcriptionJobName();
+        TranscriptionJobStatus transcriptionJobStatus = startTranscriptionJobResult.transcriptionJob().transcriptionJobStatus();
 
         TranscriptionJobCustom customTranscriptionJobInstance = TranscriptionJobCustom.builder()
                 .name(transcriptionJobName)
-                .status(transcriptionJobStatusEnum)
+                .status(transcriptionJobStatus)
                 .build();
 
         jobRepository.save(customTranscriptionJobInstance);
@@ -60,32 +62,33 @@ public class AudioTranscriptionServiceImpl implements AudioTranscriptionService 
         log.info("Pending transcription jobs: {}", pendingJobs.size());
 
         for (TranscriptionJobCustom job : pendingJobs) {
-            GetTranscriptionJobRequest request = new GetTranscriptionJobRequest()
-                    .withTranscriptionJobName(job.getName());
+            GetTranscriptionJobRequest request = GetTranscriptionJobRequest.builder()
+                    .transcriptionJobName(job.getName())
+                    .build();
 
             try {
                 TranscriptionJob transcriptionJob = transcriptionService.getTranscriptionJob(request);
-                String currentTransJobStatus = transcriptionJob.getTranscriptionJobStatus();
+                TranscriptionJobStatus currentTransJobStatus = transcriptionJob.transcriptionJobStatus();
 
-                if (!job.getStatus().toString().equalsIgnoreCase(currentTransJobStatus)) {
-                    job.setStatus(TranscriptionJobStatus.fromValue(currentTransJobStatus));
+                if (!job.getStatus().equals(currentTransJobStatus)) {
 
-                    if ("COMPLETED".equalsIgnoreCase(currentTransJobStatus)) {
+                    if (COMPLETED.equals(currentTransJobStatus)) {
 
-                        S3Object transcriptionResultObject = s3Service.getObject(request.getTranscriptionJobName());
+                        GetObjectResponse s3Object = s3Service.getObject(transcriptionJob.transcriptionJobName());
 
-                        System.out.println(transcriptionResultObject.getObjectContent());
+                        log.info("Content length {}", s3Object.contentLength());
 
                         jobRepository.delete(job);
 
                         return;
 
-                    } else if ("FAILED".equalsIgnoreCase(currentTransJobStatus)) {
+                    } else if (FAILED.equals(currentTransJobStatus)) {
                         job.setStatus(TranscriptionJobStatus.fromValue("FAILED"));
 
                         // TODO: add retry mechanism or notify user of the failure
                     }
 
+                    job.setStatus(currentTransJobStatus);
                     jobRepository.save(job);
                 }
             } catch (Exception e) {

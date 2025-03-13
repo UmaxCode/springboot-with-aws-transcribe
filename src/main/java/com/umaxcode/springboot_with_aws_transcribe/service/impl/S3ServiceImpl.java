@@ -1,22 +1,28 @@
 package com.umaxcode.springboot_with_aws_transcribe.service.impl;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.*;
 import com.umaxcode.springboot_with_aws_transcribe.configs.AWSProperties;
 import com.umaxcode.springboot_with_aws_transcribe.domain.dto.S3PutObjectResultDTO;
 import com.umaxcode.springboot_with_aws_transcribe.service.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class S3ServiceImpl implements S3Service {
 
-    private final AmazonS3 s3Client;
+    private final S3Client s3Client;
     private final AWSProperties awsProperties;
 
 
@@ -27,20 +33,20 @@ public class S3ServiceImpl implements S3Service {
         String fileName = generateUniqueFileName(file.getOriginalFilename());
 
         // Set up metadata
-        ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setContentLength(file.getSize());
-        metadata.setContentType(file.getContentType());
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put("content-type", file.getContentType());
+        metadata.put("file-size", String.valueOf(file.getSize()));
 
         // Create the upload request
-        PutObjectRequest putObjectRequest = new PutObjectRequest(
-                awsProperties.getS3InputBucketName(),
-                fileName,
-                file.getInputStream(),
-                metadata
-        );
+        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                .bucket(awsProperties.getS3InputBucketName())
+                .key(fileName)
+                .metadata(metadata)
+                .build();
 
         // Upload the file
-        PutObjectResult putObjectResult = s3Client.putObject(putObjectRequest);
+        PutObjectResponse putObjectResult = s3Client.putObject(putObjectRequest,
+                RequestBody.fromBytes(file.getBytes()));
 
         return S3PutObjectResultDTO.builder()
                 .objectKey(fileName)
@@ -49,10 +55,13 @@ public class S3ServiceImpl implements S3Service {
     }
 
     @Override
-    public S3Object getObject(String objectKey) {
+    public GetObjectResponse getObject(String objectKey) {
 
-        GetObjectRequest getObjectRequest = new GetObjectRequest(awsProperties.getS3OutputBucketName(), objectKey);
-        return s3Client.getObject(getObjectRequest);
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(awsProperties.getS3OutputBucketName())
+                .key(objectKey)
+                .build();
+        return s3Client.getObject(getObjectRequest).response();
     }
 
     /**
