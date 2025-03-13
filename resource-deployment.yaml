@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "CloudFormation template to provision AWS Transcribe with input and output S3 buckets"
+
+Resources:
+  TranscribeInputBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "transcribe-input-bucket-${AWS::AccountId}-${AWS::Region}"
+      AccessControl: Private
+
+  TranscribeOutputBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "transcribe-output-bucket-${AWS::AccountId}-${AWS::Region}"
+      AccessControl: Private
+
+  TranscribeServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: TranscribeServiceRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - transcribe.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: TranscribeS3AccessPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "s3:GetObject"
+                Resource:
+                  - !Sub "arn:aws:s3:::${TranscribeInputBucket}/*"
+              - Effect: Allow
+                Action:
+                  - "s3:PutObject"
+                Resource:
+                  - !Sub "arn:aws:s3:::${TranscribeOutputBucket}/*"
+
+Outputs:
+  InputBucketName:
+    Description: "S3 Bucket for input audio files"
+    Value: !Ref TranscribeInputBucket
+
+  OutputBucketName:
+    Description: "S3 Bucket for transcribed output files"
+    Value: !Ref TranscribeOutputBucket
+
+  TranscribeRoleArn:
+    Description: "IAM Role for AWS Transcribe to access S3"
+    Value: !GetAtt TranscribeServiceRole.Arn
