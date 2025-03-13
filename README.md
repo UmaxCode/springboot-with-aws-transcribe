@@ -93,6 +93,12 @@ mvn spring-boot:run
 | `GET` | `/api/v1/transcribe/subscribe` | Subscribe to SSE for real-time updates |
 
 ## Important Notes
+## Important Notes
 - This application uses **English (US) - `en-US`** as the transcription language.
-- **Pronunciation is critical** for accurate transcription results. Ensure clear speech for the best accuracy.
+- **Pronunciation is critical** for accurate transcription results. Ensure clear speech and minimal background noise for the best accuracy.
+- The image below illustrates this: I said **"Hello, my name is Maxwell Odoom"** and got the following result.
+  **Pronunciation is critical** for accurate transcription. Listen to this example:  
+  🎧 [Click here to play the audio](transcribe.m4a)
+![Pronunciation Example](github.png)
+
 - S3 was created using CloudFormation template : Refer to the [resource-deployment.yaml](resource-deployment.yaml)
