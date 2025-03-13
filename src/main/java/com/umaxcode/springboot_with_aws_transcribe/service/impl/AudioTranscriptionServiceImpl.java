@@ -74,7 +74,8 @@ public class AudioTranscriptionServiceImpl implements AudioTranscriptionService 
 
                     if (COMPLETED.equals(currentTransJobStatus)) {
 
-                        GetObjectResponse s3Object = s3Service.getObject(transcriptionJob.transcriptionJobName());
+                        String objectKey = transcriptionJob.transcriptionJobName() + ".json";
+                        GetObjectResponse s3Object = s3Service.getObject(objectKey);
 
                         log.info("Content length {}", s3Object.contentLength());
 
