@@ -6,6 +6,7 @@ import com.umaxcode.springboot_with_aws_transcribe.service.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
@@ -55,13 +56,13 @@ public class S3ServiceImpl implements S3Service {
     }
 
     @Override
-    public GetObjectResponse getObject(String objectKey) {
+    public ResponseInputStream<GetObjectResponse> getObject(String objectKey) {
 
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(awsProperties.getS3OutputBucketName())
                 .key(objectKey)
                 .build();
-        return s3Client.getObject(getObjectRequest).response();
+        return s3Client.getObject(getObjectRequest);
     }
 
     /**
