@@ -1,6 +1,9 @@
 package com.umaxcode.springboot_with_aws_transcribe.service.impl;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.umaxcode.springboot_with_aws_transcribe.domain.dto.S3PutObjectResultDTO;
+import com.umaxcode.springboot_with_aws_transcribe.domain.dto.TranscriptionResultDTO;
 import com.umaxcode.springboot_with_aws_transcribe.domain.entity.TranscriptionJobCustom;
 import com.umaxcode.springboot_with_aws_transcribe.repository.TranscriptionJobRepository;
 import com.umaxcode.springboot_with_aws_transcribe.service.AudioTranscriptionService;
@@ -11,10 +14,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.transcribe.model.*;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 
 import static software.amazon.awssdk.services.transcribe.model.TranscriptionJobStatus.COMPLETED;
@@ -28,6 +36,8 @@ public class AudioTranscriptionServiceImpl implements AudioTranscriptionService 
     private final TranscriptionJobRepository jobRepository;
     private final TranscriptionService transcriptionService;
     private final S3Service s3Service;
+    private final List<SseEmitter> emitters = new ArrayList<>();
+    private final ObjectMapper objectMapper;
 
 
     @Override
@@ -75,9 +85,19 @@ public class AudioTranscriptionServiceImpl implements AudioTranscriptionService 
                     if (COMPLETED.equals(currentTransJobStatus)) {
 
                         String objectKey = transcriptionJob.transcriptionJobName() + ".json";
-                        GetObjectResponse s3Object = s3Service.getObject(objectKey);
+                        ResponseInputStream<GetObjectResponse> s3Object = s3Service.getObject(objectKey);
 
-                        log.info("Content length {}", s3Object.contentLength());
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(s3Object));
+                        TranscriptionResultDTO extractedTranscriptData = extractTranscriptData(reader);
+
+                        log.info("Content length {}", s3Object.response().contentLength());
+
+                        // notify user when transcription is complete
+                        for (SseEmitter emitter : emitters) {
+                            emitter.send(SseEmitter.event()
+                                    .name("Transcript Ready")
+                                    .data(extractedTranscriptData));
+                        }
 
                         jobRepository.delete(job);
 
@@ -98,5 +118,49 @@ public class AudioTranscriptionServiceImpl implements AudioTranscriptionService 
             }
         }
 
+    }
+
+    private TranscriptionResultDTO extractTranscriptData(BufferedReader s3InputStream) throws IOException {
+
+        // Parse JSON from S3 response
+        JsonNode rootNode = objectMapper.readTree(s3InputStream);
+
+        // Navigate to results -> transcripts -> first transcript
+        JsonNode transcriptNode = rootNode.path("results").path("transcripts").get(0);
+        String transcript = transcriptNode.path("transcript").asText();
+
+        // Navigate to results -> audio_segments -> first segment
+        JsonNode audioSegmentNode = rootNode.path("results").path("audio_segments").get(0);
+        String startTime = audioSegmentNode.path("start_time").asText();
+        String endTime = audioSegmentNode.path("end_time").asText();
+
+        // Print extracted values
+        System.out.println("Transcript: " + transcript);
+        System.out.println("Start Time: " + startTime);
+        System.out.println("End Time: " + endTime);
+
+        return TranscriptionResultDTO.builder()
+                .transcript(transcript)
+                .start_time(startTime)
+                .end_time(endTime)
+                .build();
+    }
+
+    @Override
+    public SseEmitter getAudioTranscript() {
+
+        SseEmitter sseEmitter = new SseEmitter(Long.MAX_VALUE);
+        emitters.add(sseEmitter);
+        try {
+            sseEmitter.send(SseEmitter.event().name("INIT").build());
+        } catch (IOException ex) {
+            emitters.remove(sseEmitter);
+        }
+
+        sseEmitter.onCompletion(() -> emitters.remove(sseEmitter));
+        sseEmitter.onTimeout(() -> emitters.remove(sseEmitter));
+        sseEmitter.onError(e -> emitters.remove(sseEmitter));
+
+        return sseEmitter;
     }
 }
