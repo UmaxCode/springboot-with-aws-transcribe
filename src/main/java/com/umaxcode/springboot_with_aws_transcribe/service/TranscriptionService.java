@@ -5,11 +5,9 @@ import com.amazonaws.services.transcribe.model.*;
 public interface TranscriptionService {
 
     StartTranscriptionJobResult startTranscriptionJob(
-            String inputS3BucketName,
             String s3ObjectKey,
             MediaFormat mediaFormat,
-            LanguageCode languageCode,
-            String outputS3BucketName
+            LanguageCode languageCode
     );
 
     TranscriptionJob getTranscriptionJob(GetTranscriptionJobRequest request);
