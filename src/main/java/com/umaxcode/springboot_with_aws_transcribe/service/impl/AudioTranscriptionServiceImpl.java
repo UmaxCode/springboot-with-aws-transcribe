@@ -36,7 +36,7 @@ public class AudioTranscriptionServiceImpl implements AudioTranscriptionService 
         String objectKey = uploadResult.objectKey();
         StartTranscriptionJobResponse startTranscriptionJobResult = transcriptionService.startTranscriptionJob(
                 objectKey,
-                MediaFormat.MP4,  // TODO: change to support all media format
+                MediaFormat.M4_A,  // TODO: change to support all media format
                 LanguageCode.EN_US
         );
 
