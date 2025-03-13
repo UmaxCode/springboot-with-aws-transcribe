@@ -57,6 +57,8 @@ public class AudioTranscriptionServiceImpl implements AudioTranscriptionService 
 
         List<TranscriptionJobCustom> pendingJobs = jobRepository.findAllByStatus(TranscriptionJobStatus.IN_PROGRESS);
 
+        log.info("Pending transcription jobs: {}", pendingJobs.size());
+
         for (TranscriptionJobCustom job : pendingJobs) {
             GetTranscriptionJobRequest request = new GetTranscriptionJobRequest()
                     .withTranscriptionJobName(job.getName());
