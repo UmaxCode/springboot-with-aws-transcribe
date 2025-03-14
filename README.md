@@ -7,6 +7,7 @@ This project is a **Spring Boot application** that transcribes **M4A audio files
 ✅ Upload audio files (**M4A**) to **Amazon S3**  
 ✅ Start an **AWS Transcribe** job to process the file  
 ✅ Use **Spring Boot Scheduling** to poll for the transcription status  
+✅ Use **PostgreSQL Database** to store transcription job details for processing  
 ✅ Use **Server-Sent Events (SSE)** to notify users when the transcript is ready  
 ✅ Retrieve and display the transcript from **S3**
 
