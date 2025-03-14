@@ -99,6 +99,8 @@ mvn spring-boot:run
 - The image below illustrates this: I said **"Hello, my name is Maxwell Odoom"** and got the following result.
   **Pronunciation is critical** for accurate transcription. Listen to this example:  
   🎧 [Click here to play the audio](transcribe.m4a)
+Transcription result from AWS Transcribe (transcriptionJobName.json in output bucket)
+![Pronunciation Example](aws_transcribe_result.png)
 ![Pronunciation Example](github.png)
 
 - S3 buckets were created using CloudFormation template : Refer to the [resource-deployment.yaml](resource-deployment.yaml)
