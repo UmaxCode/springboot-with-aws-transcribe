@@ -68,7 +68,7 @@ IAM User with Policy Or use Role
                 "transcribe:StartTranscriptionJob",
                 "transcribe:GetTranscriptionJob"
             ],
-            "Resource": "transcriptionJobArn or *"
+            "Resource": "*"
         }
     ]
 }
