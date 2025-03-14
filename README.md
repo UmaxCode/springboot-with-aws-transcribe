@@ -20,11 +20,13 @@ This project is a **Spring Boot application** that transcribes **M4A audio files
 
 ## Technologies Used
 - **Java 21**
+- **Maven**
 - **Spring Boot**
+- **PostgreSQL Database**
 - **AWS SDK (S3, Transcribe)**
 - **Spring Scheduler**
 - **Server-Sent Events (SSE)**
-- **Maven**
+
 
 ## Setup Instructions
 ### 1. Prerequisites
