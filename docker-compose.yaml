@@ -14,5 +14,16 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  audio-transcription-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: audio-transcription-service
+    container_name: audio-transcription-service
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+
 volumes:
   postgres_data:
