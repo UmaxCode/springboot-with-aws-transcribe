@@ -100,7 +100,7 @@ mvn spring-boot:run
 - **Pronunciation is critical** for accurate transcription results. Ensure clear speech and minimal background noise for the best accuracy.
 - The image below illustrates this: I said **"Hello, my name is Maxwell Odoom"** and got the following result.
   **Pronunciation is critical** for accurate transcription. Listen to this example:  
-  🎧 [Click here to play the audio](transcribe.m4a)
+  🎧 [Click here to play the audio](transcribe.m4a)  
 Transcription result from AWS Transcribe (transcriptionJobName.json in output bucket)
 ![Pronunciation Example](aws_transcribe_result.png)
 ![Pronunciation Example](github.png)
