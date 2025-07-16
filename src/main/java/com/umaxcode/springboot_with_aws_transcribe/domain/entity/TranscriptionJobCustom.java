@@ -1,7 +1,7 @@
 package com.umaxcode.springboot_with_aws_transcribe.domain.entity;
 
-import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.mongodb.core.mapping.Document;
 import software.amazon.awssdk.services.transcribe.model.TranscriptionJobStatus;
 
 @Builder
@@ -9,18 +9,16 @@ import software.amazon.awssdk.services.transcribe.model.TranscriptionJobStatus;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity
-@Table(name = "transcription_job")
+@Document(collection = "transcription_job")
 public class TranscriptionJobCustom {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    private Long id;
+    private String id;
 
-    @Column(unique = true, nullable = false)
     private String name;
 
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
     private TranscriptionJobStatus status;
+
+    private String audioFileUrl;
+
+    private String transcript;
 }
