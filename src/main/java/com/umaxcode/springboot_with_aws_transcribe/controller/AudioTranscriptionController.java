@@ -14,7 +14,7 @@ import java.io.IOException;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/transcribe")
+@RequestMapping("/api/transcribe")
 public class AudioTranscriptionController {
 
     private final AudioTranscriptionService audioTranscriptionService;
