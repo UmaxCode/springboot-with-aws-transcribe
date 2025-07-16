@@ -43,6 +43,76 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:s3:::${TranscribeOutputBucket}/*"
 
+  TranscribeJobStateChangeRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: TranscribeJobStatusRule
+      Description: Trigger Lambda when a Transcribe job is COMPLETED or FAILED
+      EventPattern:
+        source:
+          - "aws.transcribe"
+        detail-type:
+          - "Transcribe Job State Change"
+        detail:
+          TranscriptionJobStatus:
+            - "COMPLETED"
+            - "FAILED"
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt TranscribeJobHandlerLambda.Arn
+          Id: "TranscribeJobHandlerLambdaTarget"
+
+  TranscribeJobHandlerLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: TranscribeJobHandler
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.8
+      Timeout: 10
+      Code:
+        ZipFile: |
+          def handler(event, context):
+              print("Event received:", event)
+              job_status = event['detail']['TranscriptionJobStatus']
+              job_name = event['detail']['TranscriptionJobName']
+              print(f"Job {job_name} status: {job_status}")
+              return {
+                  "statusCode": 200,
+                  "body": f"Handled job {job_name} with status {job_status}"
+              }
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: TranscribeJobLambdaExecutionRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaBasicExecution
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+
+  PermissionForEventBridgeToInvokeLambda:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref TranscribeJobHandlerLambda
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt TranscribeJobStateChangeRule.Arn
+
 Outputs:
   InputBucketName:
     Description: "S3 Bucket for input audio files"
