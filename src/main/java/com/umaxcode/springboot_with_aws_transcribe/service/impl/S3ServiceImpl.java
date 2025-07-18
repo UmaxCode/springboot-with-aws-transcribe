@@ -7,14 +7,18 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
 import java.io.IOException;
+import java.net.URL;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -72,4 +76,14 @@ public class S3ServiceImpl implements S3Service {
         return UUID.randomUUID() + "-" + originalFilename;
     }
 
+    @Override
+    public URL generatePreSignedUrl(String objectKey, int expirationInSeconds) throws IOException {
+
+        PresignedGetObjectRequest presignedGetObjectRequest = PresignedGetObjectRequest.builder()
+                .expiration(Instant.ofEpochSecond(expirationInSeconds))
+                .signedPayload(SdkBytes.fromUtf8String(objectKey))
+                .build();
+
+        return presignedGetObjectRequest.url();
+    }
 }

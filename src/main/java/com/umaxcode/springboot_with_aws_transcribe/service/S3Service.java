@@ -6,10 +6,13 @@ import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 
 import java.io.IOException;
+import java.net.URL;
 
 public interface S3Service {
 
     S3PutObjectResultDTO upload(MultipartFile file) throws IOException;
 
     ResponseInputStream<GetObjectResponse> getObject(String objectKey);
+
+    URL generatePreSignedUrl(String objectKey, int expirationInSeconds) throws IOException;
 }
